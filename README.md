@@ -43,6 +43,7 @@ financial-news-researcher-backend/
 │   └── test_tickers.py
 ├── pyproject.toml          # Project dependencies and configuration
 └── README.md
+```
 
 ---
 
