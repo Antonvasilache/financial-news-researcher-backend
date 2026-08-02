@@ -43,3 +43,40 @@ financial-news-researcher-backend/
 │   └── test_tickers.py
 ├── pyproject.toml          # Project dependencies and configuration
 └── README.md
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+* Python 3.12+ installed
+* `uv` package manager installed
+
+### 1. Installation
+Clone the repository and install dependencies using `uv`:
+
+```bash
+git clone [https://github.com/](https://github.com/)<YOUR_GITHUB_USERNAME>/financial-news-researcher-backend.git
+cd financial-news-researcher-backend
+uv sync
+```
+
+### 2. Running the development server
+Start the local FastAPI development server:
+
+```bash
+uv run fastapi dev app/main.py
+```
+The server will spin up at `http://127.0.0.1:8000`
+
+
+### 3. API Documentation
+FastAPI automatically generates interactive OpenAPI documentation. Once the app is running, visit:
+* **SwaggerUI**: `http://127.0.0.1:8000/docs`
+* **ReDoc**: `http://127.0.0.1:8000/redoc`
+
+## Running tests
+Execute the automated pytest test suite:
+```bash
+uv run pytest
+```
