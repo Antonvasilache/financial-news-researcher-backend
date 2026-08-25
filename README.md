@@ -27,8 +27,9 @@ Transitioning from traditional web development into AI engineering requires movi
 | :--- | :---: | :--- |
 | **FastAPI Core & Routing** | ✅ Implemented | Asynchronous web framework setup with modular routers |
 | **Tickers Management API** | ✅ Implemented | CRUD operations for stock tickers with schema validation & error handling |
+| **Revenue Streams Research**| ✅ Implemented | LLM-powered company revenue streams & business model breakdown |
+| **SEC Filings Ingestion** | ✅ Implemented | Automated ingestion and parsing of 10-K and 10-Q filings (Business, MD&A, Risk Factors) |
 | **Automated Test Suite** | ✅ Implemented | Isolated unit testing with `pytest` & `TestClient` |
-| **SEC Filings Ingestion** | 🚧 Roadmap | Automated ingestion and parsing of 10-K and 10-Q filings |
 | **Vector Store (ChromaDB)** | 🚧 Roadmap | Hybrid search indexing for financial document retrieval |
 | **Agentic RAG Engine** | 🚧 Roadmap | Multi-step research workflow utilizing LangGraph / LangChain |
 | **SSE Streaming** | 🚧 Roadmap | Real-time agent status and log streaming to frontend clients |
@@ -40,6 +41,7 @@ Transitioning from traditional web development into AI engineering requires movi
 * **Framework:** [FastAPI](https://fastapi.tiangolo.com/) (Asynchronous Python Web Framework)
 * **Package & Env Manager:** [`uv`](https://github.com/astral-sh/uv) (Ultra-fast Rust-based Python package manager)
 * **Data Validation:** [Pydantic v2](https://docs.pydantic.dev/latest/)
+* **HTML Parsing:** [BeautifulSoup4](https://www.crummy.com/software/BeautifulSoup/)
 * **Testing:** [pytest](https://docs.pytest.org/) & [`httpx`](https://www.python-httpx.org/) / `TestClient`
 * **Agent & RAG Stack (Upcoming):** LangChain / LangGraph, ChromaDB
 
@@ -52,14 +54,27 @@ financial-news-researcher-backend/
 ├── app/
 │   ├── __init__.py
 │   ├── main.py             # Application entrypoint & router setup
+│   ├── core/               # Configuration & environment settings
+│   │   ├── __init__.py
+│   │   └── config.py
 │   ├── schemas/            # Pydantic data models & request/response validation
 │   │   ├── __init__.py
+│   │   ├── research.py     # LLM Revenue analysis schemas
+│   │   ├── sec.py          # SEC EDGAR metadata & filing section schemas
 │   │   └── ticker.py       # Ticker schemas (TickerCreate, TickerResponse)
+│   ├── services/           # Business logic & external API clients
+│   │   ├── __init__.py
+│   │   ├── revenue_researcher.py # Hugging Face LLM analysis service
+│   │   └── sec_edgar.py    # SEC EDGAR fetcher & HTML section parser
 │   └── routers/            # API routes grouped by feature domain
 │       ├── __init__.py
+│       ├── research.py     # Revenue research endpoints
+│       ├── sec.py          # SEC filings listing & parsing endpoints
 │       └── tickers.py      # Tickers CRUD endpoints
 ├── tests/                  # Unit and integration test suite
 │   ├── __init__.py
+│   ├── test_research.py    # Revenue research endpoint tests
+│   ├── test_sec.py         # SEC filings ingestion & parser tests
 │   └── test_tickers.py     # Tickers endpoint tests
 ├── .python-version         # Python version configuration (3.14)
 ├── pyproject.toml          # Project dependencies and configuration
