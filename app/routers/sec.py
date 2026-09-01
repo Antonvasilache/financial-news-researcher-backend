@@ -22,7 +22,7 @@ def get_sec_service(
     summary="List recent SEC filings for a ticker",
     description="Fetches recent 10-K, 10-Q, or other filings metadata from SEC EDGAR for the given stock ticker.",
 )
-async def list_filings(
+def list_filings(
     ticker: Annotated[str, Query(min_length=1, description="Company ticker symbol, e.g. AAPL")],
     form_type: Annotated[
         str | None,
@@ -51,7 +51,7 @@ async def list_filings(
     summary="Fetch and parse latest 10-K or 10-Q filing",
     description="Retrieves the most recent 10-K or 10-Q filing for a ticker and extracts structured sections.",
 )
-async def get_latest_filing(
+def get_latest_filing(
     ticker: str,
     form_type: Annotated[
         str,
@@ -86,7 +86,7 @@ async def get_latest_filing(
     summary="Fetch and parse specific filing by accession number",
     description="Downloads and parses key sections (Risk Factors, MD&A, Business) for a given filing accession number.",
 )
-async def get_filing_by_accession(
+def get_filing_by_accession(
     ticker: str,
     accession_number: str,
     form_type: Annotated[

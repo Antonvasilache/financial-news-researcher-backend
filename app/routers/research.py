@@ -25,7 +25,7 @@ def get_revenue_service(
     summary="Analyze company revenue streams",
     description="Queries Hugging Face LLM Inference API to return structured key revenue streams for a given company.",
 )
-async def analyze_revenue_streams(
+def analyze_revenue_streams(
     payload: RevenueAnalysisRequest,
     service: Annotated[RevenueResearcherService, Depends(get_revenue_service)],
 ) -> RevenueAnalysisResponse:

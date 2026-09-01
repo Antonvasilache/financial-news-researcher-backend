@@ -1,9 +1,13 @@
+import logging
 import re
 from typing import Any
-from bs4 import BeautifulSoup
+
 import httpx
+from bs4 import BeautifulSoup
 
 from app.core.config import Settings
+
+logger = logging.getLogger(__name__)
 from app.schemas.sec import (
     FilingSection,
     ParsedSecFilingResponse,
@@ -250,7 +254,11 @@ class SecEdgarService:
         return text.strip()
 
     def _extract_sections(
-        self, clean_text: str, form_type: str
+        self,
+        clean_text: str,
+        form_type: str,
+        ticker: str | None = None,
+        accession_number: str | None = None,
     ) -> dict[str, FilingSection]:
         """Extract structured sections based on 10-K or 10-Q standard Item definitions."""
         is_10q = "10-Q" in form_type.upper()
@@ -264,6 +272,14 @@ class SecEdgarService:
                 re.finditer(start_pattern, clean_text, flags=re.IGNORECASE)
             )
             if not start_matches:
+                logger.warning(
+                    "Section start pattern not found for '%s' (%s) in %s filing (ticker: %s, accession: %s).",
+                    item_id,
+                    title,
+                    form_type,
+                    ticker or "unknown",
+                    accession_number or "unknown",
+                )
                 continue
 
             # To avoid Table of Contents matches, prefer occurrences with substantial following text
@@ -293,6 +309,16 @@ class SecEdgarService:
                     title=title,
                     content=best_section_text,
                     character_count=len(best_section_text),
+                )
+            else:
+                logger.warning(
+                    "Extracted section '%s' (%s) was empty or too short (%d chars) in %s filing (ticker: %s, accession: %s).",
+                    item_id,
+                    title,
+                    len(best_section_text),
+                    form_type,
+                    ticker or "unknown",
+                    accession_number or "unknown",
                 )
 
         return extracted
@@ -354,7 +380,12 @@ class SecEdgarService:
             client.close()
 
         clean_text = self._clean_html_to_text(raw_content)
-        sections = self._extract_sections(clean_text, detected_form_type)
+        sections = self._extract_sections(
+            clean_text=clean_text,
+            form_type=detected_form_type,
+            ticker=ticker,
+            accession_number=accession_number,
+        )
 
         preview_length = min(1500, len(clean_text))
         raw_preview = clean_text[:preview_length].strip()
