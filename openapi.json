@@ -1,0 +1,849 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Financial News Researcher API",
+    "description": "AI Agent backend for automated SEC filing and news analysis.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/tickers/": {
+      "get": {
+        "tags": [
+          "Tickers"
+        ],
+        "summary": "Get All Tickers",
+        "description": "Retrieve all tracked tickers.",
+        "operationId": "get_all_tickers_tickers__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TickerResponse"
+                  },
+                  "type": "array",
+                  "title": "Response Get All Tickers Tickers  Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Tickers"
+        ],
+        "summary": "Create Ticker",
+        "description": "Add new ticker to track.",
+        "operationId": "create_ticker_tickers__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TickerCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TickerResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tickers/{ticker_id}": {
+      "get": {
+        "tags": [
+          "Tickers"
+        ],
+        "summary": "Get Ticker",
+        "description": "Retrieve a single ticker by ID.",
+        "operationId": "get_ticker_tickers__ticker_id__get",
+        "parameters": [
+          {
+            "name": "ticker_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Ticker Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TickerResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Tickers"
+        ],
+        "summary": "Delete Ticker",
+        "description": "Remove a ticker from tracking.",
+        "operationId": "delete_ticker_tickers__ticker_id__delete",
+        "parameters": [
+          {
+            "name": "ticker_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Ticker Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/research/revenue-streams": {
+      "post": {
+        "tags": [
+          "Research"
+        ],
+        "summary": "Analyze company revenue streams",
+        "description": "Queries Hugging Face LLM Inference API to return structured key revenue streams for a given company.",
+        "operationId": "analyze_revenue_streams_api_v1_research_revenue_streams_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevenueAnalysisRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevenueAnalysisResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sec/filings": {
+      "get": {
+        "tags": [
+          "SEC Filings"
+        ],
+        "summary": "List recent SEC filings for a ticker",
+        "description": "Fetches recent 10-K, 10-Q, or other filings metadata from SEC EDGAR for the given stock ticker.",
+        "operationId": "list_filings_api_v1_sec_filings_get",
+        "parameters": [
+          {
+            "name": "ticker",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Company ticker symbol, e.g. AAPL",
+              "title": "Ticker"
+            },
+            "description": "Company ticker symbol, e.g. AAPL"
+          },
+          {
+            "name": "form_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional form filter (e.g. 10-K, 10-Q)",
+              "title": "Form Type"
+            },
+            "description": "Optional form filter (e.g. 10-K, 10-Q)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "description": "Max number of filings to return",
+              "default": 10,
+              "title": "Limit"
+            },
+            "description": "Max number of filings to return"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecFilingsListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sec/filings/{ticker}/latest": {
+      "get": {
+        "tags": [
+          "SEC Filings"
+        ],
+        "summary": "Fetch and parse latest 10-K or 10-Q filing",
+        "description": "Retrieves the most recent 10-K or 10-Q filing for a ticker and extracts structured sections.",
+        "operationId": "get_latest_filing_api_v1_sec_filings__ticker__latest_get",
+        "parameters": [
+          {
+            "name": "ticker",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ticker"
+            }
+          },
+          {
+            "name": "form_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Form type to fetch (default 10-K, or 10-Q)",
+              "default": "10-K",
+              "title": "Form Type"
+            },
+            "description": "Form type to fetch (default 10-K, or 10-Q)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParsedSecFilingResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sec/filings/{ticker}/{accession_number}": {
+      "get": {
+        "tags": [
+          "SEC Filings"
+        ],
+        "summary": "Fetch and parse specific filing by accession number",
+        "description": "Downloads and parses key sections (Risk Factors, MD&A, Business) for a given filing accession number.",
+        "operationId": "get_filing_by_accession_api_v1_sec_filings__ticker___accession_number__get",
+        "parameters": [
+          {
+            "name": "ticker",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ticker"
+            }
+          },
+          {
+            "name": "accession_number",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Accession Number"
+            }
+          },
+          {
+            "name": "form_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional form type hint (e.g. 10-K, 10-Q)",
+              "title": "Form Type"
+            },
+            "description": "Optional form type hint (e.g. 10-K, 10-Q)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParsedSecFilingResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Root",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "FilingSection": {
+        "properties": {
+          "item_id": {
+            "type": "string",
+            "title": "Item Id",
+            "description": "Standardized item key (e.g. item_1, item_1a, item_7)"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Section title or heading"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content",
+            "description": "Clean text content extracted for this section"
+          },
+          "character_count": {
+            "type": "integer",
+            "title": "Character Count",
+            "description": "Total character length of the section content"
+          }
+        },
+        "type": "object",
+        "required": [
+          "item_id",
+          "title",
+          "content",
+          "character_count"
+        ],
+        "title": "FilingSection"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ParsedSecFilingResponse": {
+        "properties": {
+          "ticker": {
+            "type": "string",
+            "title": "Ticker",
+            "description": "Company stock ticker symbol"
+          },
+          "cik": {
+            "type": "string",
+            "title": "Cik",
+            "description": "10-digit Central Index Key identifier"
+          },
+          "company_name": {
+            "type": "string",
+            "title": "Company Name",
+            "description": "Company legal name"
+          },
+          "form_type": {
+            "type": "string",
+            "title": "Form Type",
+            "description": "Form type (10-K or 10-Q)"
+          },
+          "accession_number": {
+            "type": "string",
+            "title": "Accession Number",
+            "description": "SEC EDGAR accession number"
+          },
+          "filing_date": {
+            "type": "string",
+            "title": "Filing Date",
+            "description": "Filing date"
+          },
+          "report_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Report Date",
+            "description": "Report period end date"
+          },
+          "sections": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/FilingSection"
+            },
+            "type": "object",
+            "title": "Sections",
+            "description": "Extracted key sections keyed by item_id (e.g. item_1a, item_7)"
+          },
+          "raw_text_preview": {
+            "type": "string",
+            "title": "Raw Text Preview",
+            "description": "Initial excerpt/preview of clean filing text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ticker",
+          "cik",
+          "company_name",
+          "form_type",
+          "accession_number",
+          "filing_date",
+          "raw_text_preview"
+        ],
+        "title": "ParsedSecFilingResponse"
+      },
+      "RevenueAnalysisRequest": {
+        "properties": {
+          "company_name": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Company Name",
+            "description": "Target company name to analyze",
+            "example": "Apple Inc."
+          },
+          "model_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Id",
+            "description": "Optional Hugging Face model override (e.g. meta-llama/Llama-3.1-8B-Instruct)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "company_name"
+        ],
+        "title": "RevenueAnalysisRequest"
+      },
+      "RevenueAnalysisResponse": {
+        "properties": {
+          "company_name": {
+            "type": "string",
+            "title": "Company Name",
+            "description": "Company name analyzed"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary",
+            "description": "Overview narrative of how the company generates revenue"
+          },
+          "primary_currency": {
+            "type": "string",
+            "title": "Primary Currency",
+            "description": "Primary reporting currency (e.g. USD)",
+            "default": "USD"
+          },
+          "revenue_streams": {
+            "items": {
+              "$ref": "#/components/schemas/RevenueStreamItem"
+            },
+            "type": "array",
+            "title": "Revenue Streams",
+            "description": "Breakdown of key revenue streams"
+          },
+          "model_used": {
+            "type": "string",
+            "title": "Model Used",
+            "description": "Hugging Face model used to generate this analysis"
+          }
+        },
+        "type": "object",
+        "required": [
+          "company_name",
+          "summary",
+          "model_used"
+        ],
+        "title": "RevenueAnalysisResponse"
+      },
+      "RevenueStreamItem": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Name of the revenue stream or product segment"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Detailed explanation of how revenue is generated"
+          },
+          "revenue_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revenue Type",
+            "description": "Classification of revenue (e.g. Product Sales, Subscription, Services)"
+          },
+          "estimated_percentage": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Percentage",
+            "description": "Estimated percentage share of overall revenue (0-100)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "description"
+        ],
+        "title": "RevenueStreamItem"
+      },
+      "SecFilingMetadata": {
+        "properties": {
+          "accession_number": {
+            "type": "string",
+            "title": "Accession Number",
+            "description": "SEC EDGAR unique accession number"
+          },
+          "form_type": {
+            "type": "string",
+            "title": "Form Type",
+            "description": "Form type (e.g. 10-K, 10-Q)"
+          },
+          "filing_date": {
+            "type": "string",
+            "title": "Filing Date",
+            "description": "Filing submission date (YYYY-MM-DD)"
+          },
+          "report_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Report Date",
+            "description": "Period end date for the report (YYYY-MM-DD)"
+          },
+          "primary_document": {
+            "type": "string",
+            "title": "Primary Document",
+            "description": "Primary document file name"
+          },
+          "document_url": {
+            "type": "string",
+            "title": "Document Url",
+            "description": "Direct URL to view document on SEC EDGAR"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Filing document description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "accession_number",
+          "form_type",
+          "filing_date",
+          "primary_document",
+          "document_url"
+        ],
+        "title": "SecFilingMetadata"
+      },
+      "SecFilingsListResponse": {
+        "properties": {
+          "ticker": {
+            "type": "string",
+            "title": "Ticker",
+            "description": "Company stock ticker symbol (e.g. AAPL)"
+          },
+          "cik": {
+            "type": "string",
+            "title": "Cik",
+            "description": "10-digit Central Index Key identifier"
+          },
+          "company_name": {
+            "type": "string",
+            "title": "Company Name",
+            "description": "Company legal name registered with SEC"
+          },
+          "filings": {
+            "items": {
+              "$ref": "#/components/schemas/SecFilingMetadata"
+            },
+            "type": "array",
+            "title": "Filings",
+            "description": "List of matching SEC filings"
+          },
+          "total_count": {
+            "type": "integer",
+            "title": "Total Count",
+            "description": "Total number of filings returned"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ticker",
+          "cik",
+          "company_name",
+          "total_count"
+        ],
+        "title": "SecFilingsListResponse"
+      },
+      "TickerCreate": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "title": "Symbol",
+            "description": "Stock ticker symbol",
+            "example": "AMD"
+          },
+          "company_name": {
+            "type": "string",
+            "title": "Company Name",
+            "description": "Company name",
+            "example": "Advanced Micro Devices, Inc."
+          }
+        },
+        "type": "object",
+        "required": [
+          "symbol",
+          "company_name"
+        ],
+        "title": "TickerCreate",
+        "description": "Schema used when adding a new ticker to track"
+      },
+      "TickerResponse": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "title": "Symbol",
+            "description": "Stock ticker symbol",
+            "example": "AMD"
+          },
+          "company_name": {
+            "type": "string",
+            "title": "Company Name",
+            "description": "Company name",
+            "example": "Advanced Micro Devices, Inc."
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "symbol",
+          "company_name",
+          "id",
+          "created_at"
+        ],
+        "title": "TickerResponse",
+        "description": "Schema returned to the client"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

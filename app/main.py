@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import research, tickers
+from app.routers import research, sec, tickers
 
 app = FastAPI(
     title="Financial News Researcher API",
@@ -26,6 +26,7 @@ app.add_middleware(
 
 app.include_router(tickers.router)
 app.include_router(research.router)
+app.include_router(sec.router)
 
 @app.get("/")
 async def root():
