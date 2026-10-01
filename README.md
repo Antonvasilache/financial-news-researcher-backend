@@ -30,9 +30,49 @@ Transitioning from traditional web development into AI engineering requires movi
 | **Revenue Streams Research**| ✅ Implemented | LLM-powered company revenue streams & business model breakdown |
 | **SEC Filings Ingestion** | ✅ Implemented | Automated ingestion and parsing of 10-K and 10-Q filings (Business, MD&A, Risk Factors) |
 | **Automated Test Suite** | ✅ Implemented | Isolated unit testing with `pytest` & `TestClient` |
-| **Vector Store (ChromaDB)** | 🚧 Roadmap | Hybrid search indexing for financial document retrieval |
-| **Agentic RAG Engine** | 🚧 Roadmap | Multi-step research workflow utilizing LangGraph / LangChain |
-| **SSE Streaming** | 🚧 Roadmap | Real-time agent status and log streaming to frontend clients |
+| **Financial Data Analysis & ML** | 📅 Planned | Quantitative financial ratio analysis & trend/anomaly detection |
+| **Deep Learning & NLP Embeddings** | 📅 Planned | Domain embeddings (FinBERT) & sentiment neural nets |
+| **LLM Fine-Tuning (PEFT/LoRA)** | 📅 Planned | Domain adaptation of open-source LLMs on financial filings |
+| **Vector Store & Hybrid RAG** | 📅 Planned | ChromaDB dense + keyword retrieval over SEC filings |
+| **Multi-Agent Orchestration & SSE** | 📅 Planned | LangChain/LangGraph research agents with real-time SSE streaming |
+
+---
+
+## 🗺️ Development Roadmap
+
+### ✅ Phase 1: LLM-Powered Revenue Streams Analysis
+- [x] **FastAPI Core Architecture:** Asynchronous API setup with Pydantic v2 validation models and modular routing.
+- [x] **Tickers Management:** In-memory CRUD endpoints with validation and error handling for tracked company tickers.
+- [x] **Prompt Engineering & Baseline Generation:** Hugging Face Inference integration to generate structured company revenue breakdowns and business models.
+- [x] **Automated Test Suite:** Isolated unit tests with `pytest` and `TestClient` covering routing and mock LLM calls.
+
+### ✅ Phase 2: SEC Filings Ingestion & 10-K/10-Q Parsing
+- [x] **SEC EDGAR Ingestion Pipeline:** Automated search and retrieval of recent 10-K (annual) and 10-Q (quarterly) filings via SEC Submissions API.
+- [x] **HTML Section Parsing:** Accurate extraction and cleaning of core filing sections:
+  - *Item 1: Business*
+  - *Item 1A: Risk Factors*
+  - *Item 7: Management's Discussion and Analysis (MD&A)*
+- [x] **Comprehensive Parser Test Coverage:** Pytest integration verifying filing retrieval, section boundaries, and fallback parsing logic.
+
+### 📅 Phase 3: Financial Data Analysis & Machine Learning
+- [ ] **Financial Metrics Extraction:** Quantitative analysis on financial statements (revenue growth, margins, balance sheet ratios).
+- [ ] **Machine Learning Classifiers:** Financial trend classification and anomaly detection using scikit-learn.
+- [ ] **Deep Learning Models (Keras):** Neural network baselines for price volatility prediction and document section classification.
+
+### 📅 Phase 4: NLP Foundation Models & Transformer Architecture
+- [ ] **Semantic Chunking & Data Prep:** Document chunking strategies tailored to tabular and narrative financial disclosures.
+- [ ] **Domain-Specific Embeddings:** Integration with financial foundational models (e.g., FinBERT) for semantic representations.
+- [ ] **Transformer-based Summarization:** Abstractive summarization for dense 10-K "Item 1A: Risk Factors" sections.
+
+### 📅 Phase 5: Generative AI Engineering & Fine-Tuning
+- [ ] **Domain Adaptation with PEFT / LoRA:** Parameter-efficient fine-tuning of open-weights LLMs (Llama/Mistral/Gemma) on financial disclosure Q&A datasets.
+- [ ] **Model Evaluation & Benchmarks:** Systematic evaluation using ROUGE, BLEU, and financial domain factual accuracy metrics.
+
+### 📅 Phase 6: Agentic RAG Systems & Real-Time Orchestration
+- [ ] **Vector Store Indexing:** High-performance ChromaDB vector storage with hybrid search (dense semantic + keyword BM25).
+- [ ] **LangChain & LangGraph Multi-Agent Workflows:** Autonomous agents collaborating across tasks (SEC Analyst, News Sentiment Researcher, Valuation Synthesizer).
+- [ ] **Real-Time SSE Streaming:** Server-Sent Events delivering live agent thought processes and tool calls to frontend interfaces.
+- [ ] **Full Financial Research Synthesis:** End-to-end automated generation of comprehensive, evidence-grounded trade thesis reports.
 
 ---
 
@@ -42,8 +82,10 @@ Transitioning from traditional web development into AI engineering requires movi
 * **Package & Env Manager:** [`uv`](https://github.com/astral-sh/uv) (Ultra-fast Rust-based Python package manager)
 * **Data Validation:** [Pydantic v2](https://docs.pydantic.dev/latest/)
 * **HTML Parsing:** [BeautifulSoup4](https://www.crummy.com/software/BeautifulSoup/)
+* **Data Science & ML:** Pandas, NumPy, Scikit-learn, Keras
+* **Transformers & Fine-Tuning:** Hugging Face Transformers, Datasets, PEFT, TRL, LoRA / QLoRA
+* **Agent & RAG Stack:** LangChain, LangGraph, ChromaDB
 * **Testing:** [pytest](https://docs.pytest.org/) & [`httpx`](https://www.python-httpx.org/) / `TestClient`
-* **Agent & RAG Stack (Upcoming):** LangChain / LangGraph, ChromaDB
 
 ---
 
