@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.core.config import Settings, get_settings
+from app.core.config import SettingsDep
 from app.schemas.research import RevenueAnalysisRequest, RevenueAnalysisResponse
 from app.services.revenue_researcher import (
     RevenueResearchError,
@@ -13,9 +13,12 @@ router = APIRouter(prefix="/api/v1/research", tags=["Research"])
 
 
 def get_revenue_service(
-    settings: Annotated[Settings, Depends(get_settings)],
+    settings: SettingsDep,
 ) -> RevenueResearcherService:
     return RevenueResearcherService(settings=settings)
+
+
+RevenueServiceDep = Annotated[RevenueResearcherService, Depends(get_revenue_service)]
 
 
 @router.post(
@@ -27,7 +30,7 @@ def get_revenue_service(
 )
 def analyze_revenue_streams(
     payload: RevenueAnalysisRequest,
-    service: Annotated[RevenueResearcherService, Depends(get_revenue_service)],
+    service: RevenueServiceDep,
 ) -> RevenueAnalysisResponse:
     """Analyze company revenue streams using Hugging Face LLM Inference API."""
     try:

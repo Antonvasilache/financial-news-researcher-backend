@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 
-from app.core.config import Settings, get_settings
+from app.core.config import SettingsDep
 from app.schemas.financials import CompanyFinancialsResponse
 from app.schemas.sec import ParsedSecFilingResponse, SecFilingsListResponse
 from app.services.financial_metrics import FinancialMetricsService
@@ -12,7 +12,7 @@ router = APIRouter(prefix="/api/v1/sec", tags=["SEC Filings"])
 
 
 def get_sec_service(
-    settings: Annotated[Settings, Depends(get_settings)],
+    settings: SettingsDep,
 ) -> SecEdgarService:
     return SecEdgarService(settings=settings)
 

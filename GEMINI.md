@@ -161,3 +161,58 @@ uv run pytest
 * [✓] Upstream SEC EDGAR rate limiting (HTTP 429) handled gracefully
 * [✓] README updated with completed Phase 3 roadmap item
 ```
+
+---
+
+## FastAPI Dependency Injection Standard (Dependency Aliases)
+
+When declaring and injecting dependencies across FastAPI routes, services, and middleware in this repository, you **MUST** adhere to the following dependency injection rules:
+
+### 1. Prohibition of Default `= None` on Typed Dependencies
+- **DO NOT** assign `= None` (or any dummy default value) to a dependency parameter:
+  ```python
+  # ❌ INCORRECT (Triggers Pylance/Pyright: "None" is not assignable to "ServiceType")
+  service: Annotated[SecEdgarService, Depends(get_sec_service)] = None
+  ```
+- With `typing.Annotated`, FastAPI automatically discovers and resolves dependencies via `Depends(...)`. Setting `= None` falsely signals to static type checkers that the parameter is nullable, triggering type errors.
+
+### 2. Mandatory Use of Reusable Dependency Type Aliases (`*Dep`)
+- **ALWAYS** declare reusable type aliases using `typing.Annotated` with a name ending in `Dep`:
+  ```python
+  # ✅ CORRECT: Clean, reusable, self-documenting alias
+  SecServiceDep = Annotated[SecEdgarService, Depends(get_sec_service)]
+  MetricsServiceDep = Annotated[FinancialMetricsService, Depends(get_financial_metrics_service)]
+  RevenueServiceDep = Annotated[RevenueResearcherService, Depends(get_revenue_service)]
+  ```
+- **Cross-cutting / Global Dependencies**: Dependencies used across multiple modules (such as application settings) must be exported directly from their source module:
+  ```python
+  # In app/core/config.py:
+  SettingsDep = Annotated[Settings, Depends(get_settings)]
+
+  # In route/service modules:
+  from app.core.config import SettingsDep
+
+  def get_sec_service(settings: SettingsDep) -> SecEdgarService:
+      return SecEdgarService(settings=settings)
+  ```
+
+### 3. Route Parameter Ordering Standard
+- In Python, parameters without default values cannot follow parameters with default values.
+- Because dependency parameters do not have default values, order route handler arguments as follows:
+  1. Required Path / Query parameters / Request payloads (no default)
+  2. Injected Dependencies (e.g. `service: SecServiceDep`, `metrics: MetricsServiceDep`)
+  3. Optional Query parameters (with default values, e.g. `limit = 10`, `form_type = None`)
+
+```python
+# ✅ CORRECT Signature Pattern:
+@router.get("/financials/{ticker}", response_model=CompanyFinancialsResponse)
+def get_company_financials(
+    ticker: Annotated[str, Path(min_length=1, max_length=10)],  # 1. Required Path
+    sec_service: SecServiceDep,                                 # 2. Injected Dependency
+    metrics_service: MetricsServiceDep,                         # 2. Injected Dependency
+    annual_limit: Annotated[int, Query(ge=1, le=20)] = 5,       # 3. Optional with default
+    quarterly_limit: Annotated[int, Query(ge=1, le=30)] = 8,    # 3. Optional with default
+) -> CompanyFinancialsResponse:
+    ...
+```
+
