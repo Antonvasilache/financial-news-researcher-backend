@@ -1,9 +1,11 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 
 from app.core.config import Settings, get_settings
+from app.schemas.financials import CompanyFinancialsResponse
 from app.schemas.sec import ParsedSecFilingResponse, SecFilingsListResponse
+from app.services.financial_metrics import FinancialMetricsService
 from app.services.sec_edgar import SecEdgarError, SecEdgarService
 
 router = APIRouter(prefix="/api/v1/sec", tags=["SEC Filings"])
@@ -15,6 +17,14 @@ def get_sec_service(
     return SecEdgarService(settings=settings)
 
 
+def get_financial_metrics_service() -> FinancialMetricsService:
+    return FinancialMetricsService()
+
+
+SecServiceDep = Annotated[SecEdgarService, Depends(get_sec_service)]
+MetricsServiceDep = Annotated[FinancialMetricsService, Depends(get_financial_metrics_service)]
+
+
 @router.get(
     "/filings",
     response_model=SecFilingsListResponse,
@@ -24,6 +34,7 @@ def get_sec_service(
 )
 def list_filings(
     ticker: Annotated[str, Query(min_length=1, description="Company ticker symbol, e.g. AAPL")],
+    service: SecServiceDep,
     form_type: Annotated[
         str | None,
         Query(description="Optional form filter (e.g. 10-K, 10-Q)"),
@@ -32,7 +43,6 @@ def list_filings(
         int,
         Query(ge=1, le=50, description="Max number of filings to return"),
     ] = 10,
-    service: Annotated[SecEdgarService, Depends(get_sec_service)] = None,
 ) -> SecFilingsListResponse:
     """Retrieve list of recent filings metadata for a ticker."""
     try:
@@ -53,11 +63,11 @@ def list_filings(
 )
 def get_latest_filing(
     ticker: str,
+    service: SecServiceDep,
     form_type: Annotated[
         str,
         Query(description="Form type to fetch (default 10-K, or 10-Q)"),
     ] = "10-K",
-    service: Annotated[SecEdgarService, Depends(get_sec_service)] = None,
 ) -> ParsedSecFilingResponse:
     """Fetch and parse the latest filing (10-K or 10-Q) for a company."""
     try:
@@ -89,11 +99,11 @@ def get_latest_filing(
 def get_filing_by_accession(
     ticker: str,
     accession_number: str,
+    service: SecServiceDep,
     form_type: Annotated[
         str | None,
         Query(description="Optional form type hint (e.g. 10-K, 10-Q)"),
     ] = None,
-    service: Annotated[SecEdgarService, Depends(get_sec_service)] = None,
 ) -> ParsedSecFilingResponse:
     """Fetch and parse a specific filing by accession number."""
     try:
@@ -104,3 +114,48 @@ def get_filing_by_accession(
         )
     except SecEdgarError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get(
+    "/financials/{ticker}",
+    response_model=CompanyFinancialsResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Get quantitative financial statements and calculated ratios for a company",
+    description="Fetches US-GAAP facts from SEC EDGAR XBRL and calculates key financial metrics and ratios (margins, liquidity, solvency, YoY growth).",
+)
+def get_company_financials(
+    ticker: Annotated[
+        str,
+        Path(
+            min_length=1,
+            max_length=10,
+            pattern=r"^[A-Za-z0-9.-]+$",
+            description="Company ticker symbol, e.g. AAPL",
+        ),
+    ],
+    sec_service: SecServiceDep,
+    metrics_service: MetricsServiceDep,
+    annual_limit: Annotated[
+        int,
+        Query(ge=1, le=20, description="Max annual periods (10-K) to return"),
+    ] = 5,
+    quarterly_limit: Annotated[
+        int,
+        Query(ge=1, le=30, description="Max quarterly periods (10-Q) to return"),
+    ] = 8,
+) -> CompanyFinancialsResponse:
+    """Fetch SEC XBRL company facts and return structured financials and calculated ratios."""
+    try:
+        cik, company_name = sec_service.get_cik_by_ticker(ticker)
+        facts_data = sec_service.get_company_facts(ticker=ticker, cik=cik)
+        return metrics_service.extract_company_financials(
+            facts_data=facts_data,
+            ticker=ticker,
+            cik=cik,
+            company_name=company_name,
+            annual_limit=annual_limit,
+            quarterly_limit=quarterly_limit,
+        )
+    except SecEdgarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+

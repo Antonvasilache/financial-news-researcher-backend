@@ -87,6 +87,7 @@ class SecEdgarService:
 
     SEC_TICKERS_URL = "https://www.sec.gov/files/company_tickers.json"
     SEC_SUBMISSIONS_BASE_URL = "https://data.sec.gov/submissions"
+    SEC_FACTS_BASE_URL = "https://data.sec.gov/api/xbrl/companyfacts"
     SEC_ARCHIVES_BASE_URL = "https://www.sec.gov/Archives/edgar/data"
 
     def __init__(self, settings: Settings):
@@ -149,6 +150,39 @@ class SecEdgarService:
                 status_code=404,
             )
         return mapping[ticker_clean]
+
+    def get_company_facts(self, ticker: str, cik: str | None = None) -> dict[str, Any]:
+        """Fetch US-GAAP company facts from SEC EDGAR XBRL API."""
+        if not cik:
+            cik, _company_name = self.get_cik_by_ticker(ticker)
+        url = f"{self.SEC_FACTS_BASE_URL}/CIK{cik}.json"
+
+        client = self._get_client()
+        try:
+            response = client.get(url)
+            if response.status_code == 404:
+                raise SecEdgarError(
+                    f"XBRL company facts for CIK {cik} ({ticker.strip().upper()}) not found on SEC EDGAR.",
+                    status_code=404,
+                )
+            if response.status_code == 429:
+                raise SecEdgarError(
+                    "SEC EDGAR rate limit exceeded (10 requests/sec limit). Please back off and retry.",
+                    status_code=429,
+                )
+            if response.status_code != 200:
+                raise SecEdgarError(
+                    f"SEC EDGAR returned status {response.status_code} while fetching company facts for CIK {cik}.",
+                    status_code=502,
+                )
+            return response.json()
+        except httpx.HTTPError as exc:
+            raise SecEdgarError(
+                f"Failed to fetch XBRL company facts from SEC EDGAR: {exc!s}",
+                status_code=502,
+            ) from exc
+        finally:
+            client.close()
 
     def get_company_filings(
         self,

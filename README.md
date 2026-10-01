@@ -55,7 +55,7 @@ Transitioning from traditional web development into AI engineering requires movi
 - [x] **Comprehensive Parser Test Coverage:** Pytest integration verifying filing retrieval, section boundaries, and fallback parsing logic.
 
 ### 📅 Phase 3: Financial Data Analysis & Machine Learning
-- [ ] **Financial Metrics Extraction:** Quantitative analysis on financial statements (revenue growth, margins, balance sheet ratios).
+- [x] **Financial Metrics Extraction:** Quantitative analysis on financial statements (revenue growth, margins, balance sheet ratios via SEC EDGAR XBRL).
 - [ ] **Machine Learning Classifiers:** Financial trend classification and anomaly detection using scikit-learn.
 - [ ] **Deep Learning Models (Keras):** Neural network baselines for price volatility prediction and document section classification.
 
