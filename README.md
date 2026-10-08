@@ -56,7 +56,7 @@ Transitioning from traditional web development into AI engineering requires movi
 
 ### 📅 Phase 3: Financial Data Analysis & Machine Learning
 - [x] **Financial Metrics Extraction:** Quantitative analysis on financial statements (revenue growth, margins, balance sheet ratios via SEC EDGAR XBRL).
-- [ ] **Machine Learning Classifiers:** Financial trend classification and anomaly detection using scikit-learn.
+- [x] **Machine Learning Classifiers:** Financial trend classification (Random Forest) and statistical/heuristic anomaly detection (Isolation Forest) using scikit-learn.
 - [ ] **Deep Learning Models (Keras):** Neural network baselines for price volatility prediction and document section classification.
 
 ### 📅 Phase 4: NLP Foundation Models & Transformer Architecture
@@ -98,23 +98,38 @@ financial-news-researcher-backend/
 │   ├── main.py             # Application entrypoint & router setup
 │   ├── core/               # Configuration & environment settings
 │   │   ├── __init__.py
-│   │   └── config.py
+│   │   ├── config.py
+│   │   └── math_utils.py   # Numerical safety, growth formulas & formatting helpers
 │   ├── schemas/            # Pydantic data models & request/response validation
 │   │   ├── __init__.py
+│   │   ├── financials.py   # Historical financial statements & quantitative ratio schemas
+│   │   ├── ml.py           # ML anomaly detection & trend classification schemas
 │   │   ├── research.py     # LLM Revenue analysis schemas
 │   │   ├── sec.py          # SEC EDGAR metadata & filing section schemas
 │   │   └── ticker.py       # Ticker schemas (TickerCreate, TickerResponse)
 │   ├── services/           # Business logic & external API clients
 │   │   ├── __init__.py
+│   │   ├── financial_metrics.py  # US-GAAP normalization & ratios engine
+│   │   ├── ml_analyzer.py        # ML anomaly detection & trend orchestrator
+│   │   ├── ml/                   # Modular ML package (features, rules, models, drivers)
+│   │   │   ├── __init__.py
+│   │   │   ├── drivers.py        # Explainable key drivers & narrative generator
+│   │   │   ├── features.py       # 11-D financial feature vector extraction
+│   │   │   ├── models.py         # Scikit-learn Isolation & Random Forest models
+│   │   │   └── rules.py          # Accounting heuristic divergence rules
 │   │   ├── revenue_researcher.py # Hugging Face LLM analysis service
 │   │   └── sec_edgar.py    # SEC EDGAR fetcher & HTML section parser
 │   └── routers/            # API routes grouped by feature domain
 │       ├── __init__.py
+│       ├── analytics.py    # Trends and anomaly detection endpoints
 │       ├── research.py     # Revenue research endpoints
-│       ├── sec.py          # SEC filings listing & parsing endpoints
+│       ├── sec.py          # SEC filings listing, financials & ML analysis endpoints
 │       └── tickers.py      # Tickers CRUD endpoints
 ├── tests/                  # Unit and integration test suite
 │   ├── __init__.py
+│   ├── test_financials.py  # SEC XBRL financials & ratios engine tests
+│   ├── test_math_utils.py  # Numerical safety, growth & formatting tests
+│   ├── test_ml.py          # ML anomaly detection & trend classifier tests
 │   ├── test_research.py    # Revenue research endpoint tests
 │   ├── test_sec.py         # SEC filings ingestion & parser tests
 │   └── test_tickers.py     # Tickers endpoint tests
