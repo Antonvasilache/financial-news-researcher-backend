@@ -1,11 +1,15 @@
+from functools import lru_cache
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
+from pydantic import Field
 
 from app.core.config import SettingsDep
 from app.schemas.financials import CompanyFinancialsResponse
+from app.schemas.ml import CompanyFinancialAnalysisResponse
 from app.schemas.sec import ParsedSecFilingResponse, SecFilingsListResponse
 from app.services.financial_metrics import FinancialMetricsService
+from app.services.ml_analyzer import FinancialMLAnalyzerService
 from app.services.sec_edgar import SecEdgarError, SecEdgarService
 
 router = APIRouter(prefix="/api/v1/sec", tags=["SEC Filings"])
@@ -21,8 +25,14 @@ def get_financial_metrics_service() -> FinancialMetricsService:
     return FinancialMetricsService()
 
 
+@lru_cache
+def get_ml_service() -> FinancialMLAnalyzerService:
+    return FinancialMLAnalyzerService()
+
+
 SecServiceDep = Annotated[SecEdgarService, Depends(get_sec_service)]
 MetricsServiceDep = Annotated[FinancialMetricsService, Depends(get_financial_metrics_service)]
+MLServiceDep = Annotated[FinancialMLAnalyzerService, Depends(get_ml_service)]
 
 
 @router.get(
@@ -158,4 +168,61 @@ def get_company_financials(
         )
     except SecEdgarError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get(
+    "/analysis/{ticker}",
+    response_model=CompanyFinancialAnalysisResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Perform ML anomaly detection and trend classification for a company",
+    description="Analyzes historical SEC XBRL financial statements using scikit-learn Isolation Forest and trend classifiers to detect balance sheet and margin anomalies and classify growth trajectory.",
+)
+@router.get(
+    "/{ticker}/analysis",
+    response_model=CompanyFinancialAnalysisResponse,
+    status_code=status.HTTP_200_OK,
+    include_in_schema=False,
+)
+def analyze_company_financials(
+    ticker: Annotated[
+        str,
+        Field(
+            min_length=1,
+            max_length=10,
+            pattern=r"^[A-Za-z0-9.-]+$",
+            description="Company ticker symbol, e.g. AAPL",
+        ),
+    ],
+    sec_service: SecServiceDep,
+    metrics_service: MetricsServiceDep,
+    ml_service: MLServiceDep,
+    period_type: Annotated[
+        str,
+        Query(
+            pattern=r"^(quarterly|annual)$",
+            description="Reporting period type to analyze: 'quarterly' (default) or 'annual'",
+        ),
+    ] = "quarterly",
+    limit: Annotated[
+        int,
+        Query(ge=1, le=20, description="Max historical periods to include in analysis"),
+    ] = 8,
+) -> CompanyFinancialAnalysisResponse:
+    """Fetch SEC XBRL facts, compute financials and ratios, and perform ML anomaly and trend analysis."""
+    try:
+        cik, company_name = sec_service.get_cik_by_ticker(ticker)
+        facts_data = sec_service.get_company_facts(ticker=ticker, cik=cik)
+        annual_limit = limit if period_type == "annual" else 5
+        quarterly_limit = limit if period_type == "quarterly" else 8
+        financials = metrics_service.extract_company_financials(
+            facts_data=facts_data,
+            ticker=ticker,
+            cik=cik,
+            company_name=company_name,
+            annual_limit=annual_limit,
+            quarterly_limit=quarterly_limit,
+        )
+        return ml_service.analyze_financials(financials=financials, period_type=period_type)
+    except SecEdgarError as error:
+        raise HTTPException(status_code=error.status_code, detail=error.message) from error
 

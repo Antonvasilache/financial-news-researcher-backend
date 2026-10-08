@@ -3,6 +3,7 @@ import math
 from datetime import date
 from typing import Any
 
+from app.core.math_utils import calculate_growth_rate, safe_divide, safe_float
 from app.schemas.financials import (
     CompanyFinancialsResponse,
     FinancialRatios,
@@ -11,6 +12,14 @@ from app.schemas.financials import (
 )
 
 logger = logging.getLogger(__name__)
+
+__all__ = [
+    "FinancialMetricsService",
+    "calculate_growth_rate",
+    "parse_date_safe",
+    "safe_divide",
+    "safe_float",
+]
 
 # Standard US-GAAP concept tag candidates in priority order
 CONCEPT_CANDIDATES: dict[str, list[str]] = {
@@ -86,34 +95,6 @@ DURATION_METRICS: set[str] = {
 }
 
 
-def safe_divide(
-    numerator: float | None, denominator: float | None, decimal_places: int = 4
-) -> float | None:
-    """Safely divide two numbers handling None, zero, non-finite values, and rounding."""
-    if numerator is None or denominator is None:
-        return None
-    if not math.isfinite(numerator) or not math.isfinite(denominator):
-        return None
-    if abs(denominator) < 1e-9:
-        return None
-    return round(numerator / denominator, decimal_places)
-
-
-def calculate_growth_rate(
-    current_value: float | None,
-    previous_value: float | None,
-    decimal_places: int = 4,
-) -> float | None:
-    """Safely calculate percentage growth handling negative bases, non-finite values, and zero bases."""
-    if current_value is None or previous_value is None:
-        return None
-    if not math.isfinite(current_value) or not math.isfinite(previous_value):
-        return None
-    if abs(previous_value) < 1e-9:
-        return None
-    return round((current_value - previous_value) / abs(previous_value), decimal_places)
-
-
 def parse_date_safe(date_string: str | None) -> date | None:
     """Parse YYYY-MM-DD date string safely."""
     if not date_string:
@@ -156,7 +137,9 @@ class FinancialMetricsService:
                         raw_val = item.get("val")
                         if raw_val is None:
                             continue
-                        value = float(raw_val)
+                        value = safe_float(raw_val, float("nan"))
+                        if not math.isfinite(value):
+                            continue
 
                         fiscal_year_raw = item.get("fy")
                         if fiscal_year_raw is None:
@@ -262,9 +245,7 @@ class FinancialMetricsService:
         existing_end = period_entry.get("_end_dates", {}).get(metric_name, "")
 
         should_update = False
-        if metric_name not in period_entry["metrics"]:
-            should_update = True
-        elif priority_index < existing_priority:
+        if metric_name not in period_entry["metrics"] or priority_index < existing_priority:
             should_update = True
         elif priority_index == existing_priority:
             if filed_date > existing_filed:
@@ -316,9 +297,7 @@ class FinancialMetricsService:
         existing_end = period_entry.get("_end_dates", {}).get(metric_name, "")
 
         should_update = False
-        if metric_name not in period_entry["metrics"]:
-            should_update = True
-        elif priority_index < existing_priority:
+        if metric_name not in period_entry["metrics"] or priority_index < existing_priority:
             should_update = True
         elif priority_index == existing_priority:
             if filed_date > existing_filed:
